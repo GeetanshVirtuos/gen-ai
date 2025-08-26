@@ -1,0 +1,57 @@
+Ref: https://youtube.com/playlist?list=PLd7PleJR_EFfRYiLdagOsv4FczMl1Cxt_&si=2u1BsQFSTQdrKLni
+
+/****** Lecture 6 ******/
+    Vector, Vector Embeddings and Vector Database
+
+    1) How would you make a recommender system for, say, Amazon:
+        (i) Approach 1: Manually hard code similar things in separate arrays. So when the user buys something from say array A1, we will recommend all other things as well from A1.
+                        
+                        Problems with this approach:
+                        -Not scalable (too much manual work- a human has to make the arrays)
+                        -One thing migh be present in more than 1 arrays. 
+                            eg: Say user buys a "blender", now a "blender" might be present in protein's array and utensil's array, so again which array will we recommend? If we decide to search all arrays in which "blender" is present, then it will be too computationally expensive.
+                        -This system can not learn from user behaviour and thus can not find patterns on its own. It's all hard coded.
+
+        (ii) Approach 2: graph based approach. Make a node for every item. Initially, all the items are connected to each other with 0 weight edges. Now, when a user buys a combination, say {protein and creatine}, we will increase the weight of protein-creatine edge by 1. So, over time, the edges will have different weights. Now, when a user buys something, we will recommend the items which are connected to it with highest weight edges.
+
+                        Advantage over approach 1:
+                        -This system can learn from user behaviour and thus can find patterns on its own.
+                        
+                        Problems with this approach:
+                        -Still not scalable. As the number of items increases, the number of edges increases quadratically. So, it will be too much memory consuming.
+                            eg: For n items, we will have O(n^2) edges.
+                                So, traversing through all the edges to find the highest weight edges will be too computationally expensive.
+                        -Cold start problem: Initially, all edges have 0 weight. So, we can not recommend anything to the user until we have enough data. This is a problem for new items which are added to the system. Until many users buy that item, it will not be recommended to anyone.
+                        -This system only captures co-occurrence of items, not content (meaning) of items.
+                            eg: Say there is an item: "ON Whey Protein" and it has been bought with "creatine" many times. Now say "ON Whey Protein" goes out of stock and a new item "Dymatize Whey Protein" is added. Now, this new item has never been bought with "creatine", so the edge weight between them is 0. So, we will not recommend "Dymatize Whey Protein" to users who buy "creatine", even though both are whey proteins and serve the same purpose. This is because the system does not understand the meaning of the items, it only looks at co-occurrence.
+
+        (iii) Approach 3: Use 1 axis (say X axis) to place all th items based on their content (meaning). So, all similar items will be placed close to each other on this axis. So, this approach works as follows:
+            i. Assign a number to each item based on its content(meaning).
+                eg: Whey Protein = 1, Creatine = 2, Blender = 3, Treadmill = 4, Dumbbell = 5
+            ii. Now, when a user buys an item, we will recommend items which are close to it on this axis.
+                eg: If a user buys "Whey Protein" (1), we will recommend "Creatine" (2) as it is close to it on the axis.
+
+            So, your axis will look like this:
+            1         2         3         4         5
+            |---------|---------|---------|---------|---------|
+            Whey   Creatine   Blender  Treadmill Dumbbell
+            Protein
+
+            Problems with this approach:
+            -The "Single meaning" problem: We are trying to capture the meaning of items in a single dimension. But, meaning is multi-dimensional.
+                eg: "Banana" might be placed far from "Protein" but are often bought together. So, we need more dimensions to capture the meaning of items.
+            -The "insertion" problem: How to insert a new item in the axis? All numbers are already taken. So, we will have to shift all the items to make space for the new item. This is again not scalable.
+
+        (iv) Approach 4: Vector based approach- Use multiple axes (say X, Y, Z axes) to place all the items based on their content (meaning). So, all similar items will be placed close to each other in this multi-dimensional space. This approach works as follows:
+            i. Assign a vector to each item based on its content(meaning).
+                eg: Whey Protein = [0.9, 0.1, 0.2], Creatine = [0.8, 0.2, 0.1], Blender = [0.1, 0.9, 0.8], Treadmill = [0.2, 0.8, 0.9], Dumbbell = [0.3, 0.7, 0.6]
+            ii. Now, when a user buys an item, we will recommend items which are close to it in this multi-dimensional space.
+
+            Note: 
+                1) Who will assign these vectors to the items? We can use pre-trained models like Word2Vec, GloVe, BERT etc. These models take a word/sentence as input and output a vector representation of that word/sentence. 
+                2) How to measure the distance between two vectors? We can use cosine similarity or Euclidean distance.
+                    (i) Cosine similarity: Measures the cosine of the angle between two vectors. It ranges from -1 to 1. 1 means the vectors are identical, 0 means they are orthogonal (completely different), -1 means they are opposite.
+                    (ii) Euclidean distance: Measures the straight line distance between two points in multi-dimensional space. It is always non-negative. 0 means the points are identical, larger values mean the points are farther apart.
+                    
+                    Cosine similarity is often better than Euclidean distance for high-dimensional data, especially in natural language processing (NLP), because it focuses on the direction of vectors (semantic meaning) rather than their magnitude. This makes it more effective at finding similar concepts, even when document lengths or feature occurrences vary significantly, which would distort Euclidean distance.
+     
