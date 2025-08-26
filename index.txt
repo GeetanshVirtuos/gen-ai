@@ -55,3 +55,97 @@ Ref: https://youtube.com/playlist?list=PLd7PleJR_EFfRYiLdagOsv4FczMl1Cxt_&si=2u1
                     
                     Cosine similarity is often better than Euclidean distance for high-dimensional data, especially in natural language processing (NLP), because it focuses on the direction of vectors (semantic meaning) rather than their magnitude. This makes it more effective at finding similar concepts, even when document lengths or feature occurrences vary significantly, which would distort Euclidean distance.
      
+/*** Lecture 7 ******/
+      What is Vector Database 
+
+    1) Forget about databases. Say you have a bunch of vectors as follows:
+        v1 = [0.9, 0.1, 0.2]
+        v2 = [0.8, 0.2, 0.1]
+        v3 = [0.1, 0.9, 0.8]
+        v4 = [0.2, 0.8, 0.9]
+        v5 = [0.3, 0.7, 0.6]
+
+        Now, say the user buys an item which is represented by the vector v1. So, you have to find the vectors which are closest to v1. How will you do that?
+            i) ENN (Exact Nearest Neighbour) Search/ Brute force approach: Calculate the distance between v1 and all other vectors and sort them based on distance. This is slow (think of millions of vectors) and the user has to wait for a long time to get the recommendations.
+
+            ii) ANN (Approximate Nearest Neighbour) Search: 
+                a. General Idea: Say we are recommending 10 things to the user. Even if out of 10, 2-3 things are not the best possible recommendations (i.e not the actually nearest neighbours), the user won't mind given we are blazing fast 😎.
+
+    2) 4 main techniques/ Algorithms to implement ANN search:
+        A) Clustering /Inverted File Index - IVF
+            i. General Idea: Divide the entire vector space into clusters represented by "centroid points". So, when a user buys an item, we will not start comparing that item with all others, first we will only compare with the cluster centroids. Then, after we get the nearest centroid, we will compare with all the items in that centroid's cluster and get the recommended items. This will reduce the search space and thus will be faster.
+            ii. How to divide the vector space into clusters? We can use K-Means clustering algorithm.
+            
+            So, when a user buys an item, we will find the cluster to which that item belongs and then search for nearest neighbours in that cluster only.
+
+            iii. Problem with this approach: the number of elements even within a cluster can be very large. So, searching within a cluster can still be slow.
+
+        B) The Decision Tree Method (Binary Space Partitioning)
+            - Performs poorly on high dimensional data (curse of dimensionality). So, not used in practice. Explaination from lecture too was not very clear on the workings of this algorithm.
+
+        C) Hierarchical Navigable Small World Graphs (HNSW) [very popular and widely used by companies in practice ]
+            i. General Idea: Create a graph where each node is a vector and edges connect nodes that are close to each other (eg: let us say every node is connected to 3 nodes nearest to it at the 1st level - bottommost level, 2 nodes nearest to it at the 2nd level and 1 node nearest to it at the 3rd level). 
+            
+            The graph is hierarchical, meaning it has multiple layers. The top layer has fewer nodes and represents a coarse view of the data, while the bottom layer has more nodes and represents a fine-grained view.
+
+            ii. How to search: Start from the top layer and navigate down to the bottom layer, following edges that lead to nodes closer to the query vector. This way, we can quickly narrow down the search space and find the nearest neighbours.
+
+            iii. Advantages: Phenomenal results, Fast search times, even for large datasets.
+     
+        D) The Compression Method (Product Quantization - PQ)
+            i. General Idea: Compress the vectors into smaller representations (codes) to reduce memory usage and speed up distance calculations. This is done by dividing the vector into sub-vectors and quantizing each sub-vector separately.
+            ii. How to search: When a user buys an item, we will compress the query vector (the "item" user bought) using the same quantization method and then compare it with the compressed vectors in the database to find the nearest neighbours.
+            iii. Advantages: Significant reduction in memory usage, Faster distance calculations due to smaller representations.
+            
+            The actual algorithm:
+            Product Quantization (PQ)
+            -------------------------------------------
+
+            Step 1: Setup
+            -------------
+            - Suppose we have N = 1 billion vectors (in our database of all "items"), each of dimension D = 128.
+            - We split each vector into M = 32 chunks, so each chunk is D/M = 4 dimensions.
+            - For each chunk m ∈ {1..M}, we train a codebook:
+                - Run k-means clustering on all chunks. So, you get K = 256 centroids per chunk.
+                - This produces M codebooks, each with K centroids.
+
+            Step 2: Encoding the Database Vectors
+            -------------------------------------
+            - For each database vector x:
+                - Split x into M chunks: (x₁, x₂, ..., x_M).
+                - For each chunk x_m:
+                    - Find nearest centroid c_m from the m-th codebook.
+                    - Store only the index of that centroid: code_m(x).
+            - So each vector is represented by a sequence of M integers (e.g., 32 bytes if K=256). Hence, massive compression from 128 Dimensions to 32 Dimensions .
+
+            Step 3: Query Processing
+            ------------------------
+            - When a new query vector q arrives (also of dimension D=128):
+                - Split q into M chunks: (q₁, q₂, ..., q_M).
+                - Compress q similarly to get a 32 Dimensional representation of it.
+
+            Step 4: Distance Approximation
+            ------------------------------
+            - To approximate distance between query q and a database vector x:
+                Now you only need to calculate the Euclidean distance between two 32-dimensional vectors instead of 128-dimensional vectors. This calculation is done 1 billion times (once for each vector in the database). Since the vectors are compressed from 128 to 32 dimensions, this process is much faster and uses less memory.
+
+            - Note: For each chunk there are only K unique distances,
+            but each database vector is a unique combination across M chunks.
+            Hence, the effective granularity is K^M (huge), not just K.
+
+            Note: I have made slight simplifications in Step 3 and Step 4. Actaually, you don’t compress the query to centroid IDs like the database vectors. Instead, you compute the query-to-centroid lookup tables and then use those to approximate distances. But the overall idea remains the same.
+
+            Step 5: Search
+            --------------
+            - For all N database vectors:
+                - Compute approximate distance as in Step 4.
+                - Rank vectors by distance.
+                - Return nearest neighbors.
+
+            Efficiency
+            ----------
+            - Much faster than computing full D-dimensional distances.
+            - Typically combined with an inverted index (IVF) to avoid scanning all N vectors.
+
+
+            
