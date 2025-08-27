@@ -145,7 +145,39 @@ Ref: https://youtube.com/playlist?list=PLd7PleJR_EFfRYiLdagOsv4FczMl1Cxt_&si=2u1
             Efficiency
             ----------
             - Much faster than computing full D-dimensional distances.
-            - Typically combined with an inverted index (IVF) to avoid scanning all N vectors.
+            - Typically combined with an  inverted index (IVF) to avoid scanning all N vectors.
 
+/****** Lecture 8 ******/
+    What is Retrieval Augmented Generation (RAG) | What is LangChain | Chat with PDF
 
-            
+    1) RAG vs Fine Tuning
+        i. Fine Tuning: Take a pre-trained model (eg: GPT-3) and train it on your specific dataset (eg: Amazon reviews). This will make the model better at generating text related to your dataset. But, this is expensive and time consuming. Also, you need a lot of data to fine tune a model. Also, once you fine tune a model, it is fixed and can not learn new information.
+
+        ii. RAG: Instead of fine tuning the model, we can use a pre-trained model as it is and augment it with a retrieval system. So, when a user asks a question, we will first retrieve relevant documents from our dataset and then pass those documents along with the question to the model. This way, the model can generate answers based on the retrieved documents. This is faster and cheaper than fine tuning. Also, the model can learn new information as we can update our dataset.
+
+    2) A RAG system is built in 2 phases:
+        i. Indexing Phase:
+            a. Data Collection: Collect the data you want to use for retrieval. This can be any text data (eg: Amazon reviews, Wikipedia articles, etc.)
+            b. Data Preprocessing: Clean the data and split it into smaller chunks (eg: paragraphs, sentences, etc.)
+            c. Embedding Generation: Use a pre-trained model (eg: Sentence Transformers, OpenAI Embeddings, etc.) to convert each chunk into a vector (embedding).
+            d. Vector Database: Store the embeddings in a vector database (eg: Pinecone, Weaviate, etc.) for efficient retrieval.   
+        ii. Query Phase:
+            a. User Query: The user asks a question (eg: "What is the best protein supplement?")
+            b. Query Embedding: Convert the user query into a vector (embedding) using the same pre-trained model used in the indexing phase.
+            c. Retrieval: Use the vector database to find the most similar embeddings to the query embedding. This will give us the most relevant chunks of text from our dataset.
+            d. Contextualization: Combine the retrieved chunks with the user query to create a context for the model.   
+            e. Generation: Pass the context to a pre-trained language model (eg: GPT-3, GPT-4, etc.) to generate an answer based on the context.
+            f. Response: Return the generated answer to the user.
+
+        Note: Why do we need chunking, why not convert the entire document into a single embedding/ vector and pass it to the LLM along with the user query?
+            - Most LLMs have a context window limit (eg: 4096 tokens for GPT-3). If the document is too long, it will exceed the context window limit and the model will not be able to process it. Also, if we convert the entire document into a single embedding, we will lose the granularity of information. By chunking, we can retrieve only the relevant chunks and pass them to the model.
+
+    3) LangChain: A framework to build applications powered by language models.
+        -Say you want to build a RAG system. The steps you will follow manually are:
+            i. Loading the data (say PDF, Word, Text, etc.)
+            ii. Chunking the data
+            iii. Generating embeddings for each chunk and storing them in a vector database
+            iv. When a user asks a question, convert the question into an embedding and retrieve relevant chunks from the vector database
+            v. Pass the retrieved chunks along with the user question to a pre-trained language model to generate an answer.
+
+        -LangChain provides modules for each of these steps. So, you can use LangChain to build a RAG system without having to write code for each step manually. It also provides integration with various LLMs and vector databases, making it easier to build and deploy RAG systems.
