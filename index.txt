@@ -1,183 +1,233 @@
-Ref: https://youtube.com/playlist?list=PLd7PleJR_EFfRYiLdagOsv4FczMl1Cxt_&si=2u1BsQFSTQdrKLni
+/************ LangChain ************/
 
-/****** Lecture 6 ******/
-    Vector, Vector Embeddings and Vector Database
+    Ref: https://youtube.com/playlist?list=PLd7PleJR_EFfRYiLdagOsv4FczMl1Cxt_&si=2u1BsQFSTQdrKLni
 
-    1) How would you make a recommender system for, say, Amazon:
-        (i) Approach 1: Manually hard code similar things in separate arrays. So when the user buys something from say array A1, we will recommend all other things as well from A1.
+    /****** Lecture 6 ******/
+        Vector, Vector Embeddings and Vector Database
+
+        1) How would you make a recommender system for, say, Amazon:
+            (i) Approach 1: Manually hard code similar things in separate arrays. So when the user buys something from annotated_types import T
+from say array A1, we will recommend all other things as well from A1.
+                            
+                            Problems with this approach:
+                            -Not scalable (too much manual work- a human has to make the arrays)
+                            -One thing migh be present in more than 1 arrays. 
+                                eg: Say user buys a "blender", now a "blender" might be present in protein's array and utensil's array, so again which array will we recommend? If we decide to search all arrays in which "blender" is present, then it will be too computationally expensive.
+                            -This system can not learn from user behaviour and thus can not find patterns on its own. It's all hard coded.
+
+            (ii) Approach 2: graph based approach. Make a node for every item. Initially, all the items are connected to each other with 0 weight edges. Now, when a user buys a combination, say {protein and creatine}, we will increase the weight of protein-creatine edge by 1. So, over time, the edges will have different weights. Now, when a user buys something, we will recommend the items which are connected to it with highest weight edges.
+
+                            Advantage over approach 1:
+                            -This system can learn from user behaviour and thus can find patterns on its own.
+                            
+                            Problems with this approach:
+                            -Still not scalable. As the number of items increases, the number of edges increases quadratically. So, it will be too much memory consuming.
+                                eg: For n items, we will have O(n^2) edges.
+                                    So, traversing through all the edges to find the highest weight edges will be too computationally expensive.
+                            -Cold start problem: Initially, all edges have 0 weight. So, we can not recommend anything to the user until we have enough data. This is a problem for new items which are added to the system. Until many users buy that item, it will not be recommended to anyone.
+                            -This system only captures co-occurrence of items, not content (meaning) of items.
+                                eg: Say there is an item: "ON Whey Protein" and it has been bought with "creatine" many times. Now say "ON Whey Protein" goes out of stock and a new item "Dymatize Whey Protein" is added. Now, this new item has never been bought with "creatine", so the edge weight between them is 0. So, we will not recommend "Dymatize Whey Protein" to users who buy "creatine", even though both are whey proteins and serve the same purpose. This is because the system does not understand the meaning of the items, it only looks at co-occurrence.
+
+            (iii) Approach 3: Use 1 axis (say X axis) to place all th items based on their content (meaning). So, all similar items will be placed close to each other on this axis. So, this approach works as follows:
+                i. Assign a number to each item based on its content(meaning).
+                    eg: Whey Protein = 1, Creatine = 2, Blender = 3, Treadmill = 4, Dumbbell = 5
+                ii. Now, when a user buys an item, we will recommend items which are close to it on this axis.
+                    eg: If a user buys "Whey Protein" (1), we will recommend "Creatine" (2) as it is close to it on the axis.
+
+                So, your axis will look like this:
+                1         2         3         4         5
+                |---------|---------|---------|---------|---------|
+                Whey   Creatine   Blender  Treadmill Dumbbell
+                Protein
+
+                Problems with this approach:
+                -The "Single meaning" problem: We are trying to capture the meaning of items in a single dimension. But, meaning is multi-dimensional.
+                    eg: "Banana" might be placed far from "Protein" but are often bought together. So, we need more dimensions to capture the meaning of items.
+                -The "insertion" problem: How to insert a new item in the axis? All numbers are already taken. So, we will have to shift all the items to make space for the new item. This is again not scalable.
+
+            (iv) Approach 4: Vector based approach- Use multiple axes (say X, Y, Z axes) to place all the items based on their content (meaning). So, all similar items will be placed close to each other in this multi-dimensional space. This approach works as follows:
+                i. Assign a vector to each item based on its content(meaning).
+                    eg: Whey Protein = [0.9, 0.1, 0.2], Creatine = [0.8, 0.2, 0.1], Blender = [0.1, 0.9, 0.8], Treadmill = [0.2, 0.8, 0.9], Dumbbell = [0.3, 0.7, 0.6]
+                ii. Now, when a user buys an item, we will recommend items which are close to it in this multi-dimensional space.
+
+                Note: 
+                    1) Who will assign these vectors to the items? We can use pre-trained models like Word2Vec, GloVe, BERT etc. These models take a word/sentence as input and output a vector representation of that word/sentence. 
+                    2) How to measure the distance between two vectors? We can use cosine similarity or Euclidean distance.
+                        (i) Cosine similarity: Measures the cosine of the angle between two vectors. It ranges from -1 to 1. 1 means the vectors are identical, 0 means they are orthogonal (completely different), -1 means they are opposite.
+                        (ii) Euclidean distance: Measures the straight line distance between two points in multi-dimensional space. It is always non-negative. 0 means the points are identical, larger values mean the points are farther apart.
                         
-                        Problems with this approach:
-                        -Not scalable (too much manual work- a human has to make the arrays)
-                        -One thing migh be present in more than 1 arrays. 
-                            eg: Say user buys a "blender", now a "blender" might be present in protein's array and utensil's array, so again which array will we recommend? If we decide to search all arrays in which "blender" is present, then it will be too computationally expensive.
-                        -This system can not learn from user behaviour and thus can not find patterns on its own. It's all hard coded.
+                        Cosine similarity is often better than Euclidean distance for high-dimensional data, especially in natural language processing (NLP), because it focuses on the direction of vectors (semantic meaning) rather than their magnitude. This makes it more effective at finding similar concepts, even when document lengths or feature occurrences vary significantly, which would distort Euclidean distance.
+        
+    /*** Lecture 7 ******/
+        What is Vector Database 
 
-        (ii) Approach 2: graph based approach. Make a node for every item. Initially, all the items are connected to each other with 0 weight edges. Now, when a user buys a combination, say {protein and creatine}, we will increase the weight of protein-creatine edge by 1. So, over time, the edges will have different weights. Now, when a user buys something, we will recommend the items which are connected to it with highest weight edges.
+        1) Forget about databases. Say you have a bunch of vectors as follows:
+            v1 = [0.9, 0.1, 0.2]
+            v2 = [0.8, 0.2, 0.1]
+            v3 = [0.1, 0.9, 0.8]
+            v4 = [0.2, 0.8, 0.9]
+            v5 = [0.3, 0.7, 0.6]
 
-                        Advantage over approach 1:
-                        -This system can learn from user behaviour and thus can find patterns on its own.
-                        
-                        Problems with this approach:
-                        -Still not scalable. As the number of items increases, the number of edges increases quadratically. So, it will be too much memory consuming.
-                            eg: For n items, we will have O(n^2) edges.
-                                So, traversing through all the edges to find the highest weight edges will be too computationally expensive.
-                        -Cold start problem: Initially, all edges have 0 weight. So, we can not recommend anything to the user until we have enough data. This is a problem for new items which are added to the system. Until many users buy that item, it will not be recommended to anyone.
-                        -This system only captures co-occurrence of items, not content (meaning) of items.
-                            eg: Say there is an item: "ON Whey Protein" and it has been bought with "creatine" many times. Now say "ON Whey Protein" goes out of stock and a new item "Dymatize Whey Protein" is added. Now, this new item has never been bought with "creatine", so the edge weight between them is 0. So, we will not recommend "Dymatize Whey Protein" to users who buy "creatine", even though both are whey proteins and serve the same purpose. This is because the system does not understand the meaning of the items, it only looks at co-occurrence.
+            Now, say the user buys an item which is represented by the vector v1. So, you have to find the vectors which are closest to v1. How will you do that?
+                i) ENN (Exact Nearest Neighbour) Search/ Brute force approach: Calculate the distance between v1 and all other vectors and sort them based on distance. This is slow (think of millions of vectors) and the user has to wait for a long time to get the recommendations.
 
-        (iii) Approach 3: Use 1 axis (say X axis) to place all th items based on their content (meaning). So, all similar items will be placed close to each other on this axis. So, this approach works as follows:
-            i. Assign a number to each item based on its content(meaning).
-                eg: Whey Protein = 1, Creatine = 2, Blender = 3, Treadmill = 4, Dumbbell = 5
-            ii. Now, when a user buys an item, we will recommend items which are close to it on this axis.
-                eg: If a user buys "Whey Protein" (1), we will recommend "Creatine" (2) as it is close to it on the axis.
+                ii) ANN (Approximate Nearest Neighbour) Search: 
+                    a. General Idea: Say we are recommending 10 things to the user. Even if out of 10, 2-3 things are not the best possible recommendations (i.e not the actually nearest neighbours), the user won't mind given we are blazing fast 😎.
 
-            So, your axis will look like this:
-            1         2         3         4         5
-            |---------|---------|---------|---------|---------|
-            Whey   Creatine   Blender  Treadmill Dumbbell
-            Protein
+        2) 4 main techniques/ Algorithms to implement ANN search:
+            A) Clustering /Inverted File Index - IVF
+                i. General Idea: Divide the entire vector space into clusters represented by "centroid points". So, when a user buys an item, we will not start comparing that item with all others, first we will only compare with the cluster centroids. Then, after we get the nearest centroid, we will compare with all the items in that centroid's cluster and get the recommended items. This will reduce the search space and thus will be faster.
+                ii. How to divide the vector space into clusters? We can use K-Means clustering algorithm.
+                
+                So, when a user buys an item, we will find the cluster to which that item belongs and then search for nearest neighbours in that cluster only.
 
-            Problems with this approach:
-            -The "Single meaning" problem: We are trying to capture the meaning of items in a single dimension. But, meaning is multi-dimensional.
-                eg: "Banana" might be placed far from "Protein" but are often bought together. So, we need more dimensions to capture the meaning of items.
-            -The "insertion" problem: How to insert a new item in the axis? All numbers are already taken. So, we will have to shift all the items to make space for the new item. This is again not scalable.
+                iii. Problem with this approach: the number of elements even within a cluster can be very large. So, searching within a cluster can still be slow.
 
-        (iv) Approach 4: Vector based approach- Use multiple axes (say X, Y, Z axes) to place all the items based on their content (meaning). So, all similar items will be placed close to each other in this multi-dimensional space. This approach works as follows:
-            i. Assign a vector to each item based on its content(meaning).
-                eg: Whey Protein = [0.9, 0.1, 0.2], Creatine = [0.8, 0.2, 0.1], Blender = [0.1, 0.9, 0.8], Treadmill = [0.2, 0.8, 0.9], Dumbbell = [0.3, 0.7, 0.6]
-            ii. Now, when a user buys an item, we will recommend items which are close to it in this multi-dimensional space.
+            B) The Decision Tree Method (Binary Space Partitioning)
+                - Performs poorly on high dimensional data (curse of dimensionality). So, not used in practice. Explaination from lecture too was not very clear on the workings of this algorithm.
 
-            Note: 
-                1) Who will assign these vectors to the items? We can use pre-trained models like Word2Vec, GloVe, BERT etc. These models take a word/sentence as input and output a vector representation of that word/sentence. 
-                2) How to measure the distance between two vectors? We can use cosine similarity or Euclidean distance.
-                    (i) Cosine similarity: Measures the cosine of the angle between two vectors. It ranges from -1 to 1. 1 means the vectors are identical, 0 means they are orthogonal (completely different), -1 means they are opposite.
-                    (ii) Euclidean distance: Measures the straight line distance between two points in multi-dimensional space. It is always non-negative. 0 means the points are identical, larger values mean the points are farther apart.
-                    
-                    Cosine similarity is often better than Euclidean distance for high-dimensional data, especially in natural language processing (NLP), because it focuses on the direction of vectors (semantic meaning) rather than their magnitude. This makes it more effective at finding similar concepts, even when document lengths or feature occurrences vary significantly, which would distort Euclidean distance.
-     
-/*** Lecture 7 ******/
-      What is Vector Database 
+            C) Hierarchical Navigable Small World Graphs (HNSW) [very popular and widely used by companies in practice ]
+                i. General Idea: Create a graph where each node is a vector and edges connect nodes that are close to each other (eg: let us say every node is connected to 3 nodes nearest to it at the 1st level - bottommost level, 2 nodes nearest to it at the 2nd level and 1 node nearest to it at the 3rd level). 
+                
+                The graph is hierarchical, meaning it has multiple layers. The top layer has fewer nodes and represents a coarse view of the data, while the bottom layer has more nodes and represents a fine-grained view.
 
-    1) Forget about databases. Say you have a bunch of vectors as follows:
-        v1 = [0.9, 0.1, 0.2]
-        v2 = [0.8, 0.2, 0.1]
-        v3 = [0.1, 0.9, 0.8]
-        v4 = [0.2, 0.8, 0.9]
-        v5 = [0.3, 0.7, 0.6]
+                ii. How to search: Start from the top layer and navigate down to the bottom layer, following edges that lead to nodes closer to the query vector. This way, we can quickly narrow down the search space and find the nearest neighbours.
 
-        Now, say the user buys an item which is represented by the vector v1. So, you have to find the vectors which are closest to v1. How will you do that?
-            i) ENN (Exact Nearest Neighbour) Search/ Brute force approach: Calculate the distance between v1 and all other vectors and sort them based on distance. This is slow (think of millions of vectors) and the user has to wait for a long time to get the recommendations.
+                iii. Advantages: Phenomenal results, Fast search times, even for large datasets.
+        
+            D) The Compression Method (Product Quantization - PQ)
+                i. General Idea: Compress the vectors into smaller representations (codes) to reduce memory usage and speed up distance calculations. This is done by dividing the vector into sub-vectors and quantizing each sub-vector separately.
+                ii. How to search: When a user buys an item, we will compress the query vector (the "item" user bought) using the same quantization method and then compare it with the compressed vectors in the database to find the nearest neighbours.
+                iii. Advantages: Significant reduction in memory usage, Faster distance calculations due to smaller representations.
+                
+                The actual algorithm:
+                Product Quantization (PQ)
+                -------------------------------------------
 
-            ii) ANN (Approximate Nearest Neighbour) Search: 
-                a. General Idea: Say we are recommending 10 things to the user. Even if out of 10, 2-3 things are not the best possible recommendations (i.e not the actually nearest neighbours), the user won't mind given we are blazing fast 😎.
+                Step 1: Setup
+                -------------
+                - Suppose we have N = 1 billion vectors (in our database of all "items"), each of dimension D = 128.
+                - We split each vector into M = 32 chunks, so each chunk is D/M = 4 dimensions.
+                - For each chunk m ∈ {1..M}, we train a codebook:
+                    - Run k-means clustering on all chunks. So, you get K = 256 centroids per chunk.
+                    - This produces M codebooks, each with K centroids.
 
-    2) 4 main techniques/ Algorithms to implement ANN search:
-        A) Clustering /Inverted File Index - IVF
-            i. General Idea: Divide the entire vector space into clusters represented by "centroid points". So, when a user buys an item, we will not start comparing that item with all others, first we will only compare with the cluster centroids. Then, after we get the nearest centroid, we will compare with all the items in that centroid's cluster and get the recommended items. This will reduce the search space and thus will be faster.
-            ii. How to divide the vector space into clusters? We can use K-Means clustering algorithm.
-            
-            So, when a user buys an item, we will find the cluster to which that item belongs and then search for nearest neighbours in that cluster only.
+                Step 2: Encoding the Database Vectors
+                -------------------------------------
+                - For each database vector x:
+                    - Split x into M chunks: (x₁, x₂, ..., x_M).
+                    - For each chunk x_m:
+                        - Find nearest centroid c_m from the m-th codebook.
+                        - Store only the index of that centroid: code_m(x).
+                - So each vector is represented by a sequence of M integers (e.g., 32 bytes if K=256). Hence, massive compression from 128 Dimensions to 32 Dimensions .
 
-            iii. Problem with this approach: the number of elements even within a cluster can be very large. So, searching within a cluster can still be slow.
+                Step 3: Query Processing
+                ------------------------
+                - When a new query vector q arrives (also of dimension D=128):
+                    - Split q into M chunks: (q₁, q₂, ..., q_M).
+                    - Compress q similarly to get a 32 Dimensional representation of it.
 
-        B) The Decision Tree Method (Binary Space Partitioning)
-            - Performs poorly on high dimensional data (curse of dimensionality). So, not used in practice. Explaination from lecture too was not very clear on the workings of this algorithm.
+                Step 4: Distance Approximation
+                ------------------------------
+                - To approximate distance between query q and a database vector x:
+                    Now you only need to calculate the Euclidean distance between two 32-dimensional vectors instead of 128-dimensional vectors. This calculation is done 1 billion times (once for each vector in the database). Since the vectors are compressed from 128 to 32 dimensions, this process is much faster and uses less memory.
 
-        C) Hierarchical Navigable Small World Graphs (HNSW) [very popular and widely used by companies in practice ]
-            i. General Idea: Create a graph where each node is a vector and edges connect nodes that are close to each other (eg: let us say every node is connected to 3 nodes nearest to it at the 1st level - bottommost level, 2 nodes nearest to it at the 2nd level and 1 node nearest to it at the 3rd level). 
-            
-            The graph is hierarchical, meaning it has multiple layers. The top layer has fewer nodes and represents a coarse view of the data, while the bottom layer has more nodes and represents a fine-grained view.
+                - Note: For each chunk there are only K unique distances,
+                but each database vector is a unique combination across M chunks.
+                Hence, the effective granularity is K^M (huge), not just K.
 
-            ii. How to search: Start from the top layer and navigate down to the bottom layer, following edges that lead to nodes closer to the query vector. This way, we can quickly narrow down the search space and find the nearest neighbours.
+                Note: I have made slight simplifications in Step 3 and Step 4. Actaually, you don’t compress the query to centroid IDs like the database vectors. Instead, you compute the query-to-centroid lookup tables and then use those to approximate distances. But the overall idea remains the same.
 
-            iii. Advantages: Phenomenal results, Fast search times, even for large datasets.
-     
-        D) The Compression Method (Product Quantization - PQ)
-            i. General Idea: Compress the vectors into smaller representations (codes) to reduce memory usage and speed up distance calculations. This is done by dividing the vector into sub-vectors and quantizing each sub-vector separately.
-            ii. How to search: When a user buys an item, we will compress the query vector (the "item" user bought) using the same quantization method and then compare it with the compressed vectors in the database to find the nearest neighbours.
-            iii. Advantages: Significant reduction in memory usage, Faster distance calculations due to smaller representations.
-            
-            The actual algorithm:
-            Product Quantization (PQ)
-            -------------------------------------------
+                Step 5: Search
+                --------------
+                - For all N database vectors:
+                    - Compute approximate distance as in Step 4.
+                    - Rank vectors by distance.
+                    - Return nearest neighbors.
 
-            Step 1: Setup
-            -------------
-            - Suppose we have N = 1 billion vectors (in our database of all "items"), each of dimension D = 128.
-            - We split each vector into M = 32 chunks, so each chunk is D/M = 4 dimensions.
-            - For each chunk m ∈ {1..M}, we train a codebook:
-                - Run k-means clustering on all chunks. So, you get K = 256 centroids per chunk.
-                - This produces M codebooks, each with K centroids.
+                Efficiency
+                ----------
+                - Much faster than computing full D-dimensional distances.
+                - Typically combined with an  inverted index (IVF) to avoid scanning all N vectors.
 
-            Step 2: Encoding the Database Vectors
-            -------------------------------------
-            - For each database vector x:
-                - Split x into M chunks: (x₁, x₂, ..., x_M).
-                - For each chunk x_m:
-                    - Find nearest centroid c_m from the m-th codebook.
-                    - Store only the index of that centroid: code_m(x).
-            - So each vector is represented by a sequence of M integers (e.g., 32 bytes if K=256). Hence, massive compression from 128 Dimensions to 32 Dimensions .
+    /****** Lecture 8 ******/
+        What is Retrieval Augmented Generation (RAG) | What is LangChain | Chat with PDF
 
-            Step 3: Query Processing
-            ------------------------
-            - When a new query vector q arrives (also of dimension D=128):
-                - Split q into M chunks: (q₁, q₂, ..., q_M).
-                - Compress q similarly to get a 32 Dimensional representation of it.
+        1) RAG vs Fine Tuning
+            i. Fine Tuning: Take a pre-trained model (eg: GPT-3) and train it on your specific dataset (eg: Amazon reviews). This will make the model better at generating text related to your dataset. But, this is expensive and time consuming. Also, you need a lot of data to fine tune a model. Also, once you fine tune a model, it is fixed and can not learn new information.
 
-            Step 4: Distance Approximation
-            ------------------------------
-            - To approximate distance between query q and a database vector x:
-                Now you only need to calculate the Euclidean distance between two 32-dimensional vectors instead of 128-dimensional vectors. This calculation is done 1 billion times (once for each vector in the database). Since the vectors are compressed from 128 to 32 dimensions, this process is much faster and uses less memory.
+            ii. RAG: Instead of fine tuning the model, we can use a pre-trained model as it is and augment it with a retrieval system. So, when a user asks a question, we will first retrieve relevant documents from our dataset and then pass those documents along with the question to the model. This way, the model can generate answers based on the retrieved documents. This is faster and cheaper than fine tuning. Also, the model can learn new information as we can update our dataset.
 
-            - Note: For each chunk there are only K unique distances,
-            but each database vector is a unique combination across M chunks.
-            Hence, the effective granularity is K^M (huge), not just K.
+        2) A RAG system is built in 2 phases:
+            i. Indexing Phase:
+                a. Data Collection: Collect the data you want to use for retrieval. This can be any text data (eg: Amazon reviews, Wikipedia articles, etc.)
+                b. Data Preprocessing: Clean the data and split it into smaller chunks (eg: paragraphs, sentences, etc.)
+                c. Embedding Generation: Use a pre-trained model (eg: Sentence Transformers, OpenAI Embeddings, etc.) to convert each chunk into a vector (embedding).
+                d. Vector Database: Store the embeddings in a vector database (eg: Pinecone, Weaviate, etc.) for efficient retrieval.   
+            ii. Query Phase:
+                a. User Query: The user asks a question (eg: "What is the best protein supplement?")
+                b. Query Embedding: Convert the user query into a vector (embedding) using the same pre-trained model used in the indexing phase.
+                c. Retrieval: Use the vector database to find the most similar embeddings to the query embedding. This will give us the most relevant chunks of text from our dataset.
+                d. Contextualization: Combine the retrieved chunks with the user query to create a context for the model.   
+                e. Generation: Pass the context to a pre-trained language model (eg: GPT-3, GPT-4, etc.) to generate an answer based on the context.
+                f. Response: Return the generated answer to the user.
 
-            Note: I have made slight simplifications in Step 3 and Step 4. Actaually, you don’t compress the query to centroid IDs like the database vectors. Instead, you compute the query-to-centroid lookup tables and then use those to approximate distances. But the overall idea remains the same.
+            Note: Why do we need chunking, why not convert the entire document into a single embedding/ vector and pass it to the LLM along with the user query?
+                - Most LLMs have a context window limit (eg: 4096 tokens for GPT-3). If the document is too long, it will exceed the context window limit and the model will not be able to process it. Also, if we convert the entire document into a single embedding, we will lose the granularity of information. By chunking, we can retrieve only the relevant chunks and pass them to the model.
 
-            Step 5: Search
-            --------------
-            - For all N database vectors:
-                - Compute approximate distance as in Step 4.
-                - Rank vectors by distance.
-                - Return nearest neighbors.
+        3) LangChain: A framework to build applications powered by language models.
+            -Say you want to build a RAG system. The steps you will follow manually are:
+                i. Loading the data (say PDF, Word, Text, etc.)
+                ii. Chunking the data
+                iii. Generating embeddings for each chunk and storing them in a vector database
+                iv. When a user asks a question, convert the question into an embedding and retrieve relevant chunks from the vector database
+                v. Pass the retrieved chunks along with the user question to a pre-trained language model to generate an answer.
 
-            Efficiency
-            ----------
-            - Much faster than computing full D-dimensional distances.
-            - Typically combined with an  inverted index (IVF) to avoid scanning all N vectors.
+            -LangChain provides modules for each of these steps. So, you can use LangChain to build a RAG system without having to write code for each step manually. It also provides integration with various LLMs and vector databases, making it easier to build and deploy RAG systems.
 
-/****** Lecture 8 ******/
-    What is Retrieval Augmented Generation (RAG) | What is LangChain | Chat with PDF
 
-    1) RAG vs Fine Tuning
-        i. Fine Tuning: Take a pre-trained model (eg: GPT-3) and train it on your specific dataset (eg: Amazon reviews). This will make the model better at generating text related to your dataset. But, this is expensive and time consuming. Also, you need a lot of data to fine tune a model. Also, once you fine tune a model, it is fixed and can not learn new information.
+/************ LangGraph ************/
+    Ref: 
 
-        ii. RAG: Instead of fine tuning the model, we can use a pre-trained model as it is and augment it with a retrieval system. So, when a user asks a question, we will first retrieve relevant documents from our dataset and then pass those documents along with the question to the model. This way, the model can generate answers based on the retrieved documents. This is faster and cheaper than fine tuning. Also, the model can learn new information as we can update our dataset.
+    1) AI Agent: AI that can make decisions and take actions on its own (within the assigned boundaries) to achieve a goal without being told exactly what to do at every step.
+        ex: An AI Agent acting as a librarian, when asked to issue a book to a member, it will check the member's account for any pending dues, verify the availability of the book in the inventory, update the inventory to mark the book as issued, and finally update the member's account with the issued book details.
+        
+        Now, the AI Agent was not explicitly pre-programmed to perform each of these steps. It had to make decisions on its own based on the goal of issuing a book to a member.
+    2) The main problem with AI Agents is "reliability". As you increase their autonomy, their reliability decreases. This is because the more autonomous an AI Agent is, the more it has to make decisions on its own, and the more chances there are for it to make mistakes.
+    This is where LangGraph comes in. It is a framework to build reliable AI Agents.
+    3) LangGraph: A framework to build reliable AI Agents.It provides a way to define the boundaries within which the AI Agent can operate. This is done using a graph structure, where each node represents a task that the AI Agent can perform, and the edges represent the flow of control between the tasks.
+    4) LangChain vs LangGraph:
+        i. LangChain: Also used to make apps (say RAG chatbot) with LLMs but apps that require a "linear flow".
+            ex: RAG chatbot, where the flow is:
+                User Query -> Retrieve relevant documents -> Pass to LLM -> Generate answer -> Return answer to user
+        ii. LangGraph: Used to make apps (AI Agents) with LLMs that require a "non-linear/ Graphical flow". So here, the flow is not linear, it can branch out into multiple paths based on the decisions made by the AI Agent.
+            ex: The librarian AI Agent example mentioned above, where the flow can branch out into multiple paths based on the decisions made by the AI Agent.
+    5) LangGraph terminology:
+        i. Node: A task that the AI Agent can perform. It can be a simple task (eg: check if a book is available in the inventory) or a complex task (eg: issue a book to a member).
+        ii. Edge: The flow of control between the nodes. It defines the order in which the tasks are performed.
+        iii. State: 
+            - State in LangGraph is a way to maintain and track information as an AI system processes data. Think of it as the system’s memory, allowing it to remember and update information as it moves through different stages of a workflow, or graph. It holds the current snapshot of information, allowing nodes to read from it, modify it, and pass it to the next node in the graph. 
+            - The state can be any Python object, but it's typically a TypedDict.
 
-    2) A RAG system is built in 2 phases:
-        i. Indexing Phase:
-            a. Data Collection: Collect the data you want to use for retrieval. This can be any text data (eg: Amazon reviews, Wikipedia articles, etc.)
-            b. Data Preprocessing: Clean the data and split it into smaller chunks (eg: paragraphs, sentences, etc.)
-            c. Embedding Generation: Use a pre-trained model (eg: Sentence Transformers, OpenAI Embeddings, etc.) to convert each chunk into a vector (embedding).
-            d. Vector Database: Store the embeddings in a vector database (eg: Pinecone, Weaviate, etc.) for efficient retrieval.   
-        ii. Query Phase:
-            a. User Query: The user asks a question (eg: "What is the best protein supplement?")
-            b. Query Embedding: Convert the user query into a vector (embedding) using the same pre-trained model used in the indexing phase.
-            c. Retrieval: Use the vector database to find the most similar embeddings to the query embedding. This will give us the most relevant chunks of text from our dataset.
-            d. Contextualization: Combine the retrieved chunks with the user query to create a context for the model.   
-            e. Generation: Pass the context to a pre-trained language model (eg: GPT-3, GPT-4, etc.) to generate an answer based on the context.
-            f. Response: Return the generated answer to the user.
+            Ex: 
+                State(user_id=123, book_id=456, is_book_available=True, has_pending_dues=False)
+                                |
+                                |
+                        Node (Issue book to user)
+                                |   
+                                |
+                                v           
+                State(user_id=123, book_id=456, is_book_available=True, has_pending_dues=False, book_issued=True)    
 
-        Note: Why do we need chunking, why not convert the entire document into a single embedding/ vector and pass it to the LLM along with the user query?
-            - Most LLMs have a context window limit (eg: 4096 tokens for GPT-3). If the document is too long, it will exceed the context window limit and the model will not be able to process it. Also, if we convert the entire document into a single embedding, we will lose the granularity of information. By chunking, we can retrieve only the relevant chunks and pass them to the model.
+            So, (i) The State is passed from one node to another in the graph, and each node can read from it and modify it as the state . 
+                (ii) Also, a node takes the current state as input and produces a new state as output.  
 
-    3) LangChain: A framework to build applications powered by language models.
-        -Say you want to build a RAG system. The steps you will follow manually are:
-            i. Loading the data (say PDF, Word, Text, etc.)
-            ii. Chunking the data
-            iii. Generating embeddings for each chunk and storing them in a vector database
-            iv. When a user asks a question, convert the question into an embedding and retrieve relevant chunks from the vector database
-            v. Pass the retrieved chunks along with the user question to a pre-trained language model to generate an answer.
 
-        -LangChain provides modules for each of these steps. So, you can use LangChain to build a RAG system without having to write code for each step manually. It also provides integration with various LLMs and vector databases, making it easier to build and deploy RAG systems.
+
+
+
+
+
+
+
+
