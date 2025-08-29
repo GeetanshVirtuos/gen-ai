@@ -221,9 +221,8 @@ from say array A1, we will recommend all other things as well from A1.
 
             So, (i) The State is passed from one node to another in the graph, and each node can read from it and modify it as the state . 
                 (ii) Also, a node takes the current state as input and produces a new state as output.  
-
-
-
+    6) Making chatbot with LangGraph:
+        (i) 4_chatbotWithToolAccess.ipynb: Till "3_chatbotWithLangGraph.ipynb", the LLM did not have access to any tools. So, If I ask it "What is the stock price of Google today, it can't tell, because LLMs have a knowledge cutoff date. So, we give our LLM access to certain "tools" that it can call when needed, like Stock APIs. LLM makes the intelligent decision of which tool to call (ex: by reading the docstring etc. associated with the tools).
 
 
 
