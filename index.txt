@@ -187,69 +187,80 @@ from say array A1, we will recommend all other things as well from A1.
 
 
 /************ LangGraph ************/
-    Ref: 
+    /************ From YT codebasics ************/
+        Ref: https://youtu.be/CnXdddeZ4tQ?feature=shared
 
-    1) AI Agent: AI that can make decisions and take actions on its own (within the assigned boundaries) to achieve a goal without being told exactly what to do at every step.
-        ex: An AI Agent acting as a librarian, when asked to issue a book to a member, it will check the member's account for any pending dues, verify the availability of the book in the inventory, update the inventory to mark the book as issued, and finally update the member's account with the issued book details.
-        
-        Now, the AI Agent was not explicitly pre-programmed to perform each of these steps. It had to make decisions on its own based on the goal of issuing a book to a member.
-    2) The main problem with AI Agents is "reliability". As you increase their autonomy, their reliability decreases. This is because the more autonomous an AI Agent is, the more it has to make decisions on its own, and the more chances there are for it to make mistakes.
-    This is where LangGraph comes in. It is a framework to build reliable AI Agents.
-    3) LangGraph: A framework to build reliable AI Agents.It provides a way to define the boundaries within which the AI Agent can operate. This is done using a graph structure, where each node represents a task that the AI Agent can perform, and the edges represent the flow of control between the tasks.
-    4) LangChain vs LangGraph:
-        i. LangChain: Also used to make apps (say RAG chatbot) with LLMs but apps that require a "linear flow".
-            ex: RAG chatbot, where the flow is:
-                User Query -> Retrieve relevant documents -> Pass to LLM -> Generate answer -> Return answer to user
-        ii. LangGraph: Used to make apps (AI Agents) with LLMs that require a "non-linear/ Graphical flow". So here, the flow is not linear, it can branch out into multiple paths based on the decisions made by the AI Agent.
-            ex: The librarian AI Agent example mentioned above, where the flow can branch out into multiple paths based on the decisions made by the AI Agent.
-    5) LangGraph terminology:
-        i. Node: A task that the AI Agent can perform. It can be a simple task (eg: check if a book is available in the inventory) or a complex task (eg: issue a book to a member).
-        ii. Edge: The flow of control between the nodes. It defines the order in which the tasks are performed.
-        iii. State: 
-            - State in LangGraph is a way to maintain and track information as an AI system processes data. Think of it as the system’s memory, allowing it to remember and update information as it moves through different stages of a workflow, or graph. It holds the current snapshot of information, allowing nodes to read from it, modify it, and pass it to the next node in the graph. 
-            - The state can be any Python object, but it's typically a TypedDict.
-
-            Ex: 
-                State(user_id=123, book_id=456, is_book_available=True, has_pending_dues=False)
-                                |
-                                |
-                        Node (Issue book to user)
-                                |   
-                                |
-                                v           
-                State(user_id=123, book_id=456, is_book_available=True, has_pending_dues=False, book_issued=True)    
-
-            So, (i) The State is passed from one node to another in the graph, and each node can read from it and modify it as the state . 
-                (ii) Also, a node takes the current state as input and produces a new state as output.  
-    6) Making chatbot with LangGraph:
-        (i) 4_chatbotWithToolAccess.ipynb: Till "3_chatbotWithLangGraph.ipynb", the LLM did not have access to any tools. So, If I ask it "What is the stock price of Google today, it can't tell, because LLMs have a knowledge cutoff date. So, we give our LLM access to certain "tools" that it can call when needed, like Stock APIs. LLM makes the intelligent decision of which tool to call (ex: by reading the docstring etc. associated with the tools).
-    7) Till now, everything was being done by the LLM, what if we want to introduce humans in the loop (HITL)? So, let us say we want a human to confirm before actually buying a stock, we would do (See "8_chatbotWithToolAccess_Agentic_HITL.ipynb") :
-
-        (i) This defines a new "tool", a function that asks for Human input using langGraph's "interrupt() function". What this will do is pause the execution of graph at the line where interrupt() is present i.e ___(1) below:
-        @tool
-        def buy_stock(stock_symbol:str, quantity:int)->str:
-            '''
-                Buys the Specified stock or denies it based on human decision.
-                :param stock_symbol: one of  "MSFT", "AAPL", "AMZN" and "RIL"
-                :param quantity: quantity of stocks to be bought
-                :return: decision that was taken by the human
-            '''
-            decision:str = interrupt(f"Approve buying {quantity} stocks of {stock_symbol} ?: ")  ___(1)
-            if(decision.lower() == "yes"):
-                print("Approved")
-                return ("Buying Approved.")
-            else:
-                return "Buying denied."
+        1) AI Agent: AI that can make decisions and take actions on its own (within the assigned boundaries) to achieve a goal without being told exactly what to do at every step.
+            ex: An AI Agent acting as a librarian, when asked to issue a book to a member, it will check the member's account for any pending dues, verify the availability of the book in the inventory, update the inventory to mark the book as issued, and finally update the member's account with the issued book details.
             
-        (ii) Then we ask for human input using python's "input()" function as follows:
-            human_decision = input("Approve: (yes/no): ")
-            state = graph.invoke(Command(resume=human_decision), config=config1)
-            print(state["messages"][-1].content)
+            Now, the AI Agent was not explicitly pre-programmed to perform each of these steps. It had to make decisions on its own based on the goal of issuing a book to a member.
+        2) The main problem with AI Agents is "reliability". As you increase their autonomy, their reliability decreases. This is because the more autonomous an AI Agent is, the more it has to make decisions on its own, and the more chances there are for it to make mistakes.
+        This is where LangGraph comes in. It is a framework to build reliable AI Agents.
+        3) LangGraph: A framework to build reliable AI Agents.It provides a way to define the boundaries within which the AI Agent can operate. This is done using a graph structure, where each node represents a task that the AI Agent can perform, and the edges represent the flow of control between the tasks.
+        4) LangChain vs LangGraph:
+            i. LangChain: Also used to make apps (say RAG chatbot) with LLMs but apps that require a "linear flow".
+                ex: RAG chatbot, where the flow is:
+                    User Query -> Retrieve relevant documents -> Pass to LLM -> Generate answer -> Return answer to user
+            ii. LangGraph: Used to make apps (AI Agents) with LLMs that require a "non-linear/ Graphical flow". So here, the flow is not linear, it can branch out into multiple paths based on the decisions made by the AI Agent.
+                ex: The librarian AI Agent example mentioned above, where the flow can branch out into multiple paths based on the decisions made by the AI Agent.
+        5) LangGraph terminology:
+            i. Node: A task that the AI Agent can perform. It can be a simple task (eg: check if a book is available in the inventory) or a complex task (eg: issue a book to a member).
+            ii. Edge: The flow of control between the nodes. It defines the order in which the tasks are performed.
+            iii. State: 
+                - State in LangGraph is a way to maintain and track information as an AI system processes data. Think of it as the system’s memory, allowing it to remember and update information as it moves through different stages of a workflow, or graph. It holds the current snapshot of information, allowing nodes to read from it, modify it, and pass it to the next node in the graph. 
+                - The state can be any Python object, but it's typically a TypedDict.
 
-            the "Command(resume=human_decision)" part resumes the graph with the value in "human_decision" variable, so if human_decision = "yes", then we resume from line ___(1) as:
-                decision = "yes" (think of it as interrupt() passsing on the received value to "decision" variable)
-            
-            then the graph resumes executing from line ___(1)
+                Ex: 
+                    State(user_id=123, book_id=456, is_book_available=True, has_pending_dues=False)
+                                    |
+                                    |
+                            Node (Issue book to user)
+                                    |   
+                                    |
+                                    v           
+                    State(user_id=123, book_id=456, is_book_available=True, has_pending_dues=False, book_issued=True)    
+
+                So, (i) The State is passed from one node to another in the graph, and each node can read from it and modify it as the state . 
+                    (ii) Also, a node takes the current state as input and produces a new state as output.  
+        6) Making chatbot with LangGraph:
+            (i) 4_chatbotWithToolAccess.ipynb: Till "3_chatbotWithLangGraph.ipynb", the LLM did not have access to any tools. So, If I ask it "What is the stock price of Google today, it can't tell, because LLMs have a knowledge cutoff date. So, we give our LLM access to certain "tools" that it can call when needed, like Stock APIs. LLM makes the intelligent decision of which tool to call (ex: by reading the docstring etc. associated with the tools).
+
+            🟩 Some terms:
+                (i) Tool: Tools are specialized functions or utilities that nodes can utilize to perform specific tasks such as fetching data from an API.
+                (ii) Tools v/s Nodes: Nodes are part of the graph structure, while tools are functionalities used within nodes
+                (iii) ToolNode: A ToolNode is just a special kind of node whose main job is to run a tool. It connects the tool’s output back into the State, so other nodes can use that information.
+
+        7) Till now, everything was being done by the LLM, what if we want to introduce humans in the loop (HITL)? So, let us say we want a human to confirm before actually buying a stock, we would do (See "8_chatbotWithToolAccess_Agentic_HITL.ipynb") :
+
+            (i) This defines a new "tool", a function that asks for Human input using langGraph's "interrupt() function". What this will do is pause the execution of graph at the line where interrupt() is present i.e ___(1) below:
+            @tool
+            def buy_stock(stock_symbol:str, quantity:int)->str:
+                '''
+                    Buys the Specified stock or denies it based on human decision.
+                    :param stock_symbol: one of  "MSFT", "AAPL", "AMZN" and "RIL"
+                    :param quantity: quantity of stocks to be bought
+                    :return: decision that was taken by the human
+                '''
+                decision:str = interrupt(f"Approve buying {quantity} stocks of {stock_symbol} ?: ")  ___(1)
+                if(decision.lower() == "yes"):
+                    print("Approved")
+                    return ("Buying Approved.")
+                else:
+                    return "Buying denied."
+                
+            (ii) Then we ask for human input using python's "input()" function as follows:
+                human_decision = input("Approve: (yes/no): ")
+                state = graph.invoke(Command(resume=human_decision), config=config1)
+                print(state["messages"][-1].content)
+
+                the "Command(resume=human_decision)" part resumes the graph with the value in "human_decision" variable, so if human_decision = "yes", then we resume from line ___(1) as:
+                    decision = "yes" (think of it as interrupt() passsing on the received value to "decision" variable)
+                
+                then the graph resumes executing from line ___(1)
+
+
+    /************ From YT freeCodeCamp.org ************/
+        Ref: https://youtu.be/jGg_1h0qzaM?feature=shared
 
 
 
