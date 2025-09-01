@@ -223,7 +223,33 @@ from say array A1, we will recommend all other things as well from A1.
                 (ii) Also, a node takes the current state as input and produces a new state as output.  
     6) Making chatbot with LangGraph:
         (i) 4_chatbotWithToolAccess.ipynb: Till "3_chatbotWithLangGraph.ipynb", the LLM did not have access to any tools. So, If I ask it "What is the stock price of Google today, it can't tell, because LLMs have a knowledge cutoff date. So, we give our LLM access to certain "tools" that it can call when needed, like Stock APIs. LLM makes the intelligent decision of which tool to call (ex: by reading the docstring etc. associated with the tools).
+    7) Till now, everything was being done by the LLM, what if we want to introduce humans in the loop (HITL)? So, let us say we want a human to confirm before actually buying a stock, we would do (See "8_chatbotWithToolAccess_Agentic_HITL.ipynb") :
 
+        (i) This defines a new "tool", a function that asks for Human input using langGraph's "interrupt() function". What this will do is pause the execution of graph at the line where interrupt() is present i.e ___(1) below:
+        @tool
+        def buy_stock(stock_symbol:str, quantity:int)->str:
+            '''
+                Buys the Specified stock or denies it based on human decision.
+                :param stock_symbol: one of  "MSFT", "AAPL", "AMZN" and "RIL"
+                :param quantity: quantity of stocks to be bought
+                :return: decision that was taken by the human
+            '''
+            decision:str = interrupt(f"Approve buying {quantity} stocks of {stock_symbol} ?: ")  ___(1)
+            if(decision.lower() == "yes"):
+                print("Approved")
+                return ("Buying Approved.")
+            else:
+                return "Buying denied."
+            
+        (ii) Then we ask for human input using python's "input()" function as follows:
+            human_decision = input("Approve: (yes/no): ")
+            state = graph.invoke(Command(resume=human_decision), config=config1)
+            print(state["messages"][-1].content)
+
+            the "Command(resume=human_decision)" part resumes the graph with the value in "human_decision" variable, so if human_decision = "yes", then we resume from line ___(1) as:
+                decision = "yes" (think of it as interrupt() passsing on the received value to "decision" variable)
+            
+            then the graph resumes executing from line ___(1)
 
 
 
