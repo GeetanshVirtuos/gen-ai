@@ -262,7 +262,10 @@ from say array A1, we will recommend all other things as well from A1.
     /************ From YT freeCodeCamp.org ************/
         Ref: https://youtu.be/jGg_1h0qzaM?feature=shared
 
-        Resume from 1:14:17
+        Resume from 2:08:26
+
+        1) [From 2:03:27] ReAct Agent (Reasoning and Acting agent): This is an LLM with access to tools
+    
 
 
 
