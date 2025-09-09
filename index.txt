@@ -262,9 +262,9 @@ from say array A1, we will recommend all other things as well from A1.
     /************ From YT freeCodeCamp.org ************/
         Ref: https://youtu.be/jGg_1h0qzaM?feature=shared
 
-        Resume from 2:08:26
+        Resume from 2:52:20
 
-        1) [From 2:03:27] ReAct Agent (Reasoning and Acting agent): This is an LLM with access to tools
+        1) [From 2:03:27 in video][From 1_AiAgent3_ReActAgent.ipynb in files] ReAct Agent (Reasoning and Acting agent)[Important from this point onwards to understand LLM with tools]: This is an LLM with access to tools.
     
 
 
